@@ -1,0 +1,20 @@
+////////////////////////////////////////////////////////////////////////////
+//                  **** WAVPACK DirectShow Filter ****                   //
+//            CoreCodec WavPackDSSplitter && WavPackDSDecoder             //
+//              Copyright (c) 2005 - 2007 Christophe Paris.               //
+//          WavPack Copyright (c) 1998 - 2013 Conifer Software.           //
+//                          All Rights Reserved.                          //
+//        Distributed under the GNU Software License (see Copying)        //
+////////////////////////////////////////////////////////////////////////////
+
+This package contains all the source code required to build the DirectShow
+splitter and decoder filters for the WavPack audio format. This code was
+originally written by Christophe Paris and was part of CoreCodec.org, but
+is now maintained and distributed by Conifer Software. It is licensed under
+the GNU General Public License (although the WavPack library portion is
+additionally distributed under the modified BSD license).
+
+This is currently set up to build with Visual Studio 2008 and the v7.1 SDK.
+Note that you will first need to build strmbase.lib and strmbasd.lib in the
+Samples directory of the SDK. There is also a NSIS script to create an
+installer, although this requires a manual step.

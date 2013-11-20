@@ -1,0 +1,201 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// French (France) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_ABOUT DIALOG  0, 0, 210, 159
+STYLE DS_SETFONT | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,4,202,23
+    CTEXT           "WavPack DirectShow Filter Decoder",IDC_STATIC,10,13,188,8
+    GROUPBOX        "",IDC_STATIC,4,29,202,126
+    CTEXT           "Version XX.XX.XX.XX - (XXXXXXXXXXX)",IDC_LABEL_VERSION,10,40,188,8
+    CTEXT           "http://www.wavpack.com",IDC_STATIC,10,50,188,8
+    CTEXT           "DirectShow filter by christophe.paris@free.fr",IDC_STATIC,10,70,188,8
+    CONTROL         "IDB_BITMAP_LOGO_WAVPACK",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,28,97,16,14
+    CONTROL         "IDB_BITMAP_LOGO_CORE",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,125,97,16,14
+    CTEXT           "Copyright (c) 2005 Conifer Software",IDC_STATIC,10,60,188,8
+    CTEXT           "Sponsored by http://www.corecodec.org",IDC_STATIC,10,80,188,8
+END
+
+IDD_DIALOG_INFO DIALOG  0, 0, 210, 159
+STYLE DS_SETFONT | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,4,202,23
+    CTEXT           "WavPack DirectShow Filter Decoder",IDC_STATIC,10,13,188,8
+    GROUPBOX        "",IDC_STATIC,4,29,202,84
+    RTEXT           "48000 Hz",IDC_LABEL_SAMPLERATE,145,39,53,8
+    LTEXT           "Sample rate :",IDC_STATIC,96,39,42,8
+    LTEXT           "Channels :",IDC_STATIC,96,51,34,8
+    LTEXT           "Bits per sample :",IDC_STATIC,96,63,52,8
+    RTEXT           "2",IDC_LABEL_CHANNELS,145,51,53,8
+    RTEXT           "16",IDC_LABEL_BPS,151,63,47,8
+    LTEXT           "Frame decoded :",IDC_STATIC,96,75,54,8
+    RTEXT           "0",IDC_LABEL_FRAMES,151,75,47,8
+    LTEXT           "CRC errors :",IDC_STATIC,96,87,39,8
+    RTEXT           "0",IDC_LABEL_CRC,145,87,53,8
+    LTEXT           "Mode :",IDC_STATIC,96,99,23,8
+    RTEXT           "Lossless or lossy",IDC_LABEL_MODE,121,99,77,8
+    CONTROL         "IDB_BITMAP_LOGO_WAVPACK",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,10,39,16,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 206
+        VERTGUIDE, 10
+        VERTGUIDE, 198
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 155
+        HORZGUIDE, 97
+    END
+
+    IDD_DIALOG_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 206
+        VERTGUIDE, 10
+        VERTGUIDE, 96
+        VERTGUIDE, 145
+        VERTGUIDE, 198
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 155
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_LOGO_WAVPACK BITMAP                  "Resource\\wavpacklogo16.bmp"
+IDB_BITMAP_LOGO_CORE    BITMAP                  "Resource\\CoreLogo16.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,2,0,0
+ PRODUCTVERSION 1,2,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040c04b0"
+        BEGIN
+            VALUE "Comments", "www.wavpack.com"
+            VALUE "CompanyName", "-"
+            VALUE "FileDescription", "WavPack Audio DirectShow Decoder"
+            VALUE "FileVersion", "1, 2, 0, 0"
+            VALUE "InternalName", "WavPackDSDecoder"
+            VALUE "LegalCopyright", "Copyright © 2005-2013"
+            VALUE "OriginalFilename", "WavPackDSDecoder.ax"
+            VALUE "ProductName", "WavPack Audio DirectShow Decoder"
+            VALUE "ProductVersion", "1, 2, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x40c, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUT               "About"
+    IDS_INFO                "Info"
+END
+
+#endif    // French (France) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
