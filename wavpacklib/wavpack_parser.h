@@ -29,7 +29,6 @@ typedef struct {
     int channel_count;
     int bits_per_sample;
     uint32_t sample_rate;
-    uint32_t samples_per_block;
 
     int several_blocks;
 

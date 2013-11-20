@@ -168,8 +168,6 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
 			// Assume those data never change
 			wpp->bits_per_sample = wpp->block_bits_per_sample;
 			wpp->sample_rate = wpp->block_sample_rate;
-			// Assume first block is the biggest ???
-			wpp->samples_per_block = wpp->block_samples_per_block;
 
 			// Make sure we have the total number of samples
 			if(wpp->first_wphdr.total_samples == (uint32_t)-1)
@@ -206,11 +204,32 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
 	
 	if(wpp->fb->len > 0)
 	{
-		// Calculate the suggested buffer size, we use the size of the RAW
-		// decoded data as reference and add 10% to be safer
-		wpp->suggested_buffer_size = (int)(wpp->samples_per_block * 4 *
-			wpp->channel_count * 1.1);		  
+        // based on reading the first block(s), calculate the maximum buffer required for an entire frame
+        unsigned int samples_per_block = wpp->sample_rate;  // "high" mode defaults to 1 second blocks
+
+        // but this is scaled back for multichannel or high sample-rate files
+        while (samples_per_block * wpp->channel_count > 150000)
+            samples_per_block /= 2;
+
+        // make sure user did not override the default
+        if (wpp->block_samples_per_block > samples_per_block)
+            samples_per_block = wpp->block_samples_per_block;
+
+        // this is an estimate based on zero compression (which would be the case with FS white noise)
+        wpp->suggested_buffer_size = samples_per_block * wpp->channel_count * wpp->block_bits_per_sample / 8;
+
+        // now we add a percentage for possible overhead (more for float data)
+        if (wpp->first_wphdr.flags & FLOAT_DATA)
+		    wpp->suggested_buffer_size += wpp->suggested_buffer_size >> 1;
+        else
+		    wpp->suggested_buffer_size += wpp->suggested_buffer_size >> 3;
+
+        // finally add overhead of WavPack headers
 		wpp->suggested_buffer_size += (sizeof(WavpackHeader) * wpp->fb->nb_block);
+
+        DebugLog("wavpack_parser_new(): samples in first block = %d, suggested_buffer_size = %d",
+            wpp->block_samples_per_block, wpp->suggested_buffer_size);
+
 		return wpp;
 	}
 	else
