@@ -1,0 +1,9 @@
+#
+# Visual Studio ignores
+#
+
+Release/
+Debug/
+*.ncb
+*.user
+*.suo
