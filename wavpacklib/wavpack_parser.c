@@ -39,7 +39,7 @@ const uint32_t sample_rates [] = { 6000, 8000, 9600, 11025, 12000, 16000, 22050,
 
 // ----------------------------------------------------------------------------
 
-int my_read_metadata_buff (WavpackMetadata *wpmd,
+static int my_read_metadata_buff (WavpackMetadata *wpmd,
 						   uchar **buffptr,
 							uchar *blockptr_end)
 {
@@ -81,49 +81,60 @@ int my_read_metadata_buff (WavpackMetadata *wpmd,
    return TRUE;
 }
 
-int my_process_metadata (WavpackMetadata *wpmd, int *correction)
+static int my_process_metadata (WavPack_parser *wpp, WavpackMetadata *wpmd)
 {	
 	switch (wpmd->id) {
-	case ID_WVC_BITSTREAM:
-		*correction = TRUE;
-		return FALSE;
-	case ID_DUMMY:
-	case ID_DECORR_TERMS:
-	case ID_DECORR_WEIGHTS:
-	case ID_DECORR_SAMPLES:
-	case ID_ENTROPY_VARS:
-	case ID_HYBRID_PROFILE:
-	case ID_SHAPING_WEIGHTS:
-	case ID_FLOAT_INFO:
-	case ID_INT32_INFO:
+
+	case ID_SAMPLE_RATE:
+        if (wpmd->byte_length == 3) {
+            unsigned char *byteptr = wpmd->data;
+            int sample_rate = (int32_t) *byteptr++;
+            sample_rate |= (int32_t) *byteptr++ << 8;
+            sample_rate |= (int32_t) *byteptr++ << 16;
+            DebugLog("my_process_metadata(): got custom sample rate of %d!", sample_rate);
+            wpp->sample_rate = sample_rate;
+        }
+        return TRUE;
+
 	case ID_CHANNEL_INFO:
-	case ID_CONFIG_BLOCK:
-	case ID_WV_BITSTREAM:
-	case ID_WVX_BITSTREAM:
-	case ID_RIFF_HEADER:
-	case ID_RIFF_TRAILER:
-	case ID_MD5_CHECKSUM:
-		return TRUE;
+        if (wpmd->byte_length >= 1 && wpmd->byte_length <= 6) {
+            int bytecnt = wpmd->byte_length, channel_mask = 0, shift = 0;
+            unsigned char *byteptr = wpmd->data;
+
+            if (bytecnt == 6) {
+                byteptr += 3;
+                channel_mask = (int32_t) *byteptr++;
+                channel_mask |= (int32_t) *byteptr++ << 8;
+                channel_mask |= (int32_t) *byteptr++ << 16;
+            }
+            else
+                while (--bytecnt) {
+                    channel_mask |= (uint32_t) *++byteptr << shift;
+                    shift += 8;
+                }
+           
+            DebugLog("my_process_metadata(): got channel mask of %03x!", channel_mask);
+        }
+        return TRUE;
 
 	default:
-		return (wpmd->id & ID_OPTIONAL_DATA) ? TRUE : FALSE;
+		return TRUE;
 	}
 }
 
-int is_correction_block(uchar* blockbuff, uint32_t len)
+static void my_scan_metadata (WavPack_parser *wpp, uchar* blockbuff, uint32_t len)
 {
 	WavpackMetadata wpmd;
 	uchar *blockptr_start = blockbuff;
 	uchar *blockptr_end = blockbuff + len;
-	int correction = 0;
+
 	while (my_read_metadata_buff (&wpmd, &blockptr_start, blockptr_end))
 	{
-		if (!my_process_metadata (&wpmd, &correction))
+		if (!my_process_metadata (wpp, &wpmd))
 		{
 			break;
 		}
 	}
-	return correction;
 }
 
 // ----------------------------------------------------------------------------
@@ -189,16 +200,11 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
 		striped_header_len = strip_wavpack_block(wpp->fb, &wpp->wphdr, wpp->io, bcount,
 			!wpp->is_correction, wpp->several_blocks);
 
-		/*
-		// check metadata to know if it's a correction block
-		if((wpp->fb->nb_block == 1) &&
-		   ((wpp->first_wphdr.flags & HYBRID_FLAG) == HYBRID_FLAG))
-		{
-			int correction = is_correction_block(wpp->fb->data + striped_header_len,
-				wpp->fb->len - striped_header_len);
+        // if this is the first block, we scan the metadata for special cases (specifically
+        // non-standard sampling rates and channel masks)
 
-		}
-		*/
+		if (wpp->fb->nb_block == 1)
+            my_scan_metadata (wpp, wpp->fb->data + striped_header_len, wpp->fb->len - striped_header_len);
 
 	} while(is_final_block == FALSE);
 	
