@@ -1090,7 +1090,8 @@ HRESULT CWavPackDSSplitterOutputPin::GetMediaType(int iPosition, CMediaType *pMe
     pwfxout->wFormatTag = WAVE_FORMAT_WAVPACK;
 	pwfxout->cbSize = sizeof(wavpack_codec_private_data);
 	
-    pwfxout->wBitsPerSample = wpp->bits_per_sample;
+    // rounding bits per sample up to the next byte allows 12- and 20-bit files to play
+    pwfxout->wBitsPerSample = (wpp->bits_per_sample + 7) & ~7;
     pwfxout->nChannels = wpp->channel_count;
     pwfxout->nSamplesPerSec = wpp->sample_rate;    
 
