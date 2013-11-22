@@ -283,7 +283,8 @@ HRESULT CWavPackDSDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
         (pwfxin->wBitsPerSample == 24) ||
         (pwfxin->wBitsPerSample == 32);
     
-    if(pwfxin->wBitsPerSample == 32)
+    if(pwfxin->wBitsPerSample == 32 &&
+        (pwfxin->cbSize < sizeof (m_PrivateData) || (m_PrivateData.flags & WPFLAGS_FLOATDATA)))
     {
         wfex.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
         wfex.Format.wFormatTag = bUseWavExtensible ?
@@ -328,6 +329,10 @@ HRESULT CWavPackDSDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
         wfex.dwChannelMask = KSAUDIO_SPEAKER_DIRECTOUT; // XXX : or SPEAKER_ALL ??
         break;
     }
+
+    if(pwfxin->cbSize >= sizeof (m_PrivateData))
+        wfex.dwChannelMask = m_PrivateData.channel_mask;
+
     wfex.Samples.wValidBitsPerSample = wfex.Format.wBitsPerSample;  
     
     mtOut->SetType(&MEDIATYPE_Audio);

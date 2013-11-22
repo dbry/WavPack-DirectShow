@@ -98,7 +98,7 @@ static int my_process_metadata (WavPack_parser *wpp, WavpackMetadata *wpmd)
 
 	case ID_CHANNEL_INFO:
         if (wpmd->byte_length >= 1 && wpmd->byte_length <= 6) {
-            int bytecnt = wpmd->byte_length, channel_mask = 0, shift = 0;
+            uint32_t bytecnt = wpmd->byte_length, channel_mask = 0, shift = 0;
             unsigned char *byteptr = wpmd->data;
 
             if (bytecnt == 6) {
@@ -114,6 +114,7 @@ static int my_process_metadata (WavPack_parser *wpp, WavpackMetadata *wpmd)
                 }
            
             DebugLog("my_process_metadata(): got channel mask of %03x!", channel_mask);
+            wpp->channel_mask = channel_mask;
         }
         return TRUE;
 
@@ -203,9 +204,10 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
         // if this is the first block, we scan the metadata for special cases (specifically
         // non-standard sampling rates and channel masks)
 
-		if (wpp->fb->nb_block == 1)
+		if (wpp->fb->nb_block == 1) {
+            wpp->channel_mask = 0x5 - wpp->channel_count;   // default basic case of 1 or 2 channels
             my_scan_metadata (wpp, wpp->fb->data + striped_header_len, wpp->fb->len - striped_header_len);
-
+        }
 	} while(is_final_block == FALSE);
 	
 	if(wpp->fb->len > 0)

@@ -50,10 +50,16 @@ static const GUID MEDIASUBTYPE_WAVPACK_CORRECTION_Stream =
 
 // ----------------------------------------------------------------------------
 
+// This structure was originally only 2 bytes and contained only the WavPack stream version.
+// It has now been expanded to 8 bytes to allow the splitter to communicate non-standard
+// channels masks and whether 32-bit audio data is float or int (WavPack supports both).
+
 typedef struct {
-	short version;
+	short version, flags;
+    uint32_t channel_mask;
 } wavpack_codec_private_data;
 
+#define WPFLAGS_FLOATDATA   0x1
 
 // Flag that identify additionnal block data
 // It's correction data in case of WavPack

@@ -28,7 +28,7 @@ typedef struct {
     // global metadata
     int channel_count;
     int bits_per_sample;
-    uint32_t sample_rate;
+    uint32_t sample_rate, channel_mask;
 
     int several_blocks;
 
