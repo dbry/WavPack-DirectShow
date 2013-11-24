@@ -38,8 +38,8 @@ BEGIN
     CTEXT           "DirectShow filter by christophe.paris@free.fr",IDC_STATIC,10,70,188,8
     CONTROL         "IDB_BITMAP_LOGO_WAVPACK",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,28,97,16,14
     CONTROL         "IDB_BITMAP_LOGO_CORE",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,125,97,16,14
-    CTEXT           "Copyright (c) 2005 Conifer Software",IDC_STATIC,10,60,188,8
-    CTEXT           "Sponsored by http://www.corecodec.org",IDC_STATIC,10,80,188,8
+    CTEXT           "Copyright (c) 2013 Conifer Software",IDC_STATIC,10,60,188,8
+    CTEXT           "Sponsored by http://www.corecodec.com",IDC_STATIC,10,80,188,8
 END
 
 IDD_DIALOG_INFO DIALOG  0, 0, 210, 159
