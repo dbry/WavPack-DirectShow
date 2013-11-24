@@ -34,7 +34,7 @@ public:
 	HRESULT OnDisconnect();
 	HRESULT OnActivate();
 	HRESULT OnDeactivate();
-	BOOL OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	INT_PTR OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HRESULT OnApplyChanges();
 
 private:

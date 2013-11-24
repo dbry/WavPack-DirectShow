@@ -10,7 +10,7 @@ public:
 	CWavPackDSDecoderAboutProp(LPUNKNOWN pUnk, HRESULT *phr);
 	virtual ~CWavPackDSDecoderAboutProp();
 	HRESULT OnActivate();
-	BOOL OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	INT_PTR OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 //-----------------------------------------------------------------------------

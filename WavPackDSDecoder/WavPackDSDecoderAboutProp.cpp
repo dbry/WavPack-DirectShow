@@ -84,7 +84,7 @@ HRESULT CWavPackDSDecoderAboutProp::OnActivate()
 
 //-----------------------------------------------------------------------------
 
-BOOL CWavPackDSDecoderAboutProp::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CWavPackDSDecoderAboutProp::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	return CBasePropertyPage::OnReceiveMessage(hwnd, uMsg, wParam, lParam);		
 }

@@ -39,20 +39,20 @@ void RegisterSourceFilterExtension(const char* Extension,
 	{
 		GUID2String(CLSIDString, SourceFilterGUID);
 		RegSetValueEx(Key, "Source Filter", 0, REG_SZ,
-			(CONST BYTE *) CLSIDString, strlen(CLSIDString));
+			(CONST BYTE *) CLSIDString, (DWORD) strlen(CLSIDString));
 		
 		if(!IsEqualGUID(MediaType,CLSID_NULL))
 		{
 			GUID2String(CLSIDString, MediaType);
 			RegSetValueEx(Key, "Media Type", 0, REG_SZ,
-				(CONST BYTE *) CLSIDString, strlen(CLSIDString));
+				(CONST BYTE *) CLSIDString, (DWORD) strlen(CLSIDString));
 		}
 		
 		if(!IsEqualGUID(MediaType,CLSID_NULL))
 		{
 			GUID2String(CLSIDString, Subtype);
 			RegSetValueEx(Key, "Subtype", 0, REG_SZ,
-				(CONST BYTE *) CLSIDString, strlen(CLSIDString));
+				(CONST BYTE *) CLSIDString, (DWORD) strlen(CLSIDString));
 		}
 		RegCloseKey(Key);
 	}
@@ -91,10 +91,10 @@ void RegisterSourceFilterPattern(const char* Pattern,
 	{
 		GUID2String(CLSIDString,SourceFilterGUID);
 		RegSetValueEx(Key, "Source Filter", 0, REG_SZ,
-			(CONST BYTE *) CLSIDString, strlen(CLSIDString));
+			(CONST BYTE *) CLSIDString, (DWORD) strlen(CLSIDString));
 		
 		// The pattern use the following format : offset,cb,mask,val
-		RegSetValueEx(Key, "0", 0, REG_SZ, (CONST BYTE *) Pattern, strlen(Pattern));
+		RegSetValueEx(Key, "0", 0, REG_SZ, (CONST BYTE *) Pattern, (DWORD) strlen(Pattern));
 		RegCloseKey(Key);
 	}
 }
@@ -120,7 +120,7 @@ char* GetToken(char* src, const char* sep, int& position) {
     char* nextRes = strstr(res, sep);
     int tokenLen = 0;
     if (nextRes) {
-        position += nextRes - res + 1;
+        position += (int)(nextRes - res + 1);
         *nextRes = 0;
     } else {
         position = -1;
@@ -188,14 +188,14 @@ void RegisterWMPExtension(const char* Extension, const char* Description,
 		{
 			wsprintf(KeyName,"%d",MaxIndex+1);
 			// Add Extension
-			RegSetValueEx(Key, KeyName, 0, REG_SZ, (CONST BYTE*)Extension, strlen(Extension));
+			RegSetValueEx(Key, KeyName, 0, REG_SZ, (CONST BYTE*)Extension, (DWORD) strlen(Extension));
 			RegCloseKey(Key);
 
 			// Add Description
 			if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 				"SOFTWARE\\Microsoft\\MediaPlayer\\Player\\Extensions\\Descriptions", 0, KEY_WRITE, &Key))
 			{
-				RegSetValueEx(Key, KeyName, 0, REG_SZ, (CONST BYTE*)Description, strlen(Description));
+				RegSetValueEx(Key, KeyName, 0, REG_SZ, (CONST BYTE*)Description, (DWORD) strlen(Description));
 				RegCloseKey(Key);				
 			}
 
@@ -203,7 +203,7 @@ void RegisterWMPExtension(const char* Extension, const char* Description,
 			if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 				"SOFTWARE\\Microsoft\\MediaPlayer\\Player\\Extensions\\MUIDescriptions", 0, KEY_WRITE, &Key))
 			{
-				RegSetValueEx(Key, KeyName, 0, REG_SZ, (CONST BYTE*)MUIDescription, strlen(MUIDescription));
+				RegSetValueEx(Key, KeyName, 0, REG_SZ, (CONST BYTE*)MUIDescription, (DWORD) strlen(MUIDescription));
 				RegCloseKey(Key);				
 			}
 		} else {
@@ -231,7 +231,7 @@ void RegisterWMPExtension(const char* Extension, const char* Description,
 		if(PerceivedType)
 		{		
 			RegSetValueEx(Key, "PerceivedType", 0, REG_SZ, (BYTE*)PerceivedType,
-				strlen(PerceivedType));		
+				(DWORD) strlen(PerceivedType));		
 		}
 		RegCloseKey(Key);
 	}

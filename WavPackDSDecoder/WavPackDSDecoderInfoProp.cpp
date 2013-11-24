@@ -171,7 +171,7 @@ HRESULT CWavPackDSDecoderInfoProp::OnApplyChanges(void)
 
 // ----------------------------------------------------------------------------
 
-BOOL CWavPackDSDecoderInfoProp::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CWavPackDSDecoderInfoProp::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if(m_fWindowInActive)
 		return FALSE;
