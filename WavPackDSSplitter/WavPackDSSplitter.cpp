@@ -26,6 +26,9 @@
 #include <initguid.h>
 #include <mmreg.h>
 
+#include <ks.h>
+#include <ksmedia.h>
+
 #include "..\wavpack\wavpack.h"
 #include "..\wavpacklib\wavpack_common.h"
 #include "..\wavpacklib\wavpack_frame.h"
@@ -1083,25 +1086,35 @@ HRESULT CWavPackDSSplitterOutputPin::GetMediaType(int iPosition, CMediaType *pMe
     }
     pMediaType->SetFormatType(&FORMAT_WaveFormatEx);
     pMediaType->SetVariableSize();
+
+    // this structure is used to pass private data to the decoder
     
+    wavpack_codec_private_data wcpd = { wpp->wphdr.version, 0, wpp->channel_mask };
+    int private_size = sizeof (wcpd);
+
+    if (wpp->bits_per_sample == 32 && !(wpp->wphdr.flags & FLOAT_DATA))
+        wcpd.flags |= WPFLAGS_INT32DATA;
+    
+    // here we decide if we can get away with just sending the previous version of
+    // the WavPack private data which just contained the 16-bit stream version number
+
+    if (!wcpd.flags && wpp->channel_count < NUM_DEFAULT_CHANNEL_MASKS &&
+        wpp->channel_mask == DefaultChannelMasks [wpp->channel_count])
+            private_size = sizeof(wcpd.version);
+
     WAVEFORMATEX *pwfxout = (WAVEFORMATEX*)pMediaType->AllocFormatBuffer(
-        sizeof(WAVEFORMATEX) + sizeof(wavpack_codec_private_data));
-    ZeroMemory(pwfxout, sizeof(WAVEFORMATEX) + sizeof(wavpack_codec_private_data));
+        sizeof(WAVEFORMATEX) + private_size);
+    ZeroMemory(pwfxout, sizeof(WAVEFORMATEX) + private_size);
     pwfxout->wFormatTag = WAVE_FORMAT_WAVPACK;
-	pwfxout->cbSize = sizeof(wavpack_codec_private_data);
+    pwfxout->cbSize = private_size;
 	
     // rounding bits per sample up to the next byte allows 12- and 20-bit files to play
     pwfxout->wBitsPerSample = (wpp->bits_per_sample + 7) & ~7;
     pwfxout->nChannels = wpp->channel_count;
     pwfxout->nSamplesPerSec = wpp->sample_rate;    
 
-    wavpack_codec_private_data* pd = (wavpack_codec_private_data*)(pwfxout + 1);
-    pd->channel_mask = wpp->channel_mask;    
-    pd->version = wpp->wphdr.version;    
+    memcpy (pwfxout + 1, &wcpd, private_size);  // copy in 2 or 8 bytes of private data
 
-    if (wpp->bits_per_sample == 32 && (wpp->wphdr.flags & FLOAT_DATA))
-        pd->flags |= WPFLAGS_FLOATDATA;
-    
     return S_OK;
 }
 

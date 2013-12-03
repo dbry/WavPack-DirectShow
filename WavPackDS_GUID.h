@@ -50,16 +50,33 @@ static const GUID MEDIASUBTYPE_WAVPACK_CORRECTION_Stream =
 
 // ----------------------------------------------------------------------------
 
+// This table provides the default speaker configurations based on number of channels
+// up to 5.1 surround. If the WavPack file indicates a different speaker configuration
+// than what's here (or there are more than 6 channels) then the splitter will pass the
+// actual channel mask in the expanded wavpack_codec_private_data struct below.
+
+static const DWORD DefaultChannelMasks [] = {
+    KSAUDIO_SPEAKER_DIRECTOUT,                      // channels = 0 (really a placeholder)
+    KSAUDIO_SPEAKER_MONO,                           // channels = 1
+    KSAUDIO_SPEAKER_STEREO,                         // channels = 2
+    KSAUDIO_SPEAKER_STEREO | SPEAKER_FRONT_CENTER,  // channels = 3
+    KSAUDIO_SPEAKER_QUAD,                           // channels = 4
+    KSAUDIO_SPEAKER_QUAD | SPEAKER_FRONT_CENTER,    // channels = 5
+    KSAUDIO_SPEAKER_5POINT1                         // channels = 6
+};
+
+#define NUM_DEFAULT_CHANNEL_MASKS (sizeof (DefaultChannelMasks) / sizeof (DefaultChannelMasks [0]))
+
 // This structure was originally only 2 bytes and contained only the WavPack stream version.
 // It has now been expanded to 8 bytes to allow the splitter to communicate non-standard
 // channels masks and whether 32-bit audio data is float or int (WavPack supports both).
 
 typedef struct {
 	short version, flags;
-    uint32_t channel_mask;
+    DWORD channel_mask;
 } wavpack_codec_private_data;
 
-#define WPFLAGS_FLOATDATA   0x1
+#define WPFLAGS_INT32DATA   0x1
 
 // Flag that identify additionnal block data
 // It's correction data in case of WavPack

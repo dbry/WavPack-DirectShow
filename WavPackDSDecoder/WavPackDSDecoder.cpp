@@ -25,8 +25,10 @@
 #include <initguid.h>
 #include <mmreg.h>
 
+#include <ks.h>
+#include <ksmedia.h>
+
 #include "..\wavpack\wavpack.h"
-//#include "..\wavpack\wputils.h"
 #include "..\wavpacklib\wavpack_common.h"
 #include "..\wavpacklib\wavpack_frame.h"
 #include "..\wavpacklib\wavpack_buffer_decoder.h"
@@ -34,9 +36,6 @@
 #include "IWavPackDSDecoder.h"
 #include "..\WavPackDS_GUID.h"
 #include "WavPackDSDecoder.h"
-
-#include <ks.h>
-#include <ksmedia.h>
 
 #include "WavPackDSDecoderAboutProp.h"
 #include "WavPackDSDecoderInfoProp.h"
@@ -284,7 +283,7 @@ HRESULT CWavPackDSDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
         (pwfxin->wBitsPerSample == 32);
     
     if(pwfxin->wBitsPerSample == 32 &&
-        (pwfxin->cbSize < sizeof (m_PrivateData) || (m_PrivateData.flags & WPFLAGS_FLOATDATA)))
+        (pwfxin->cbSize < sizeof (m_PrivateData) || !(m_PrivateData.flags & WPFLAGS_INT32DATA)))
     {
         wfex.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
         wfex.Format.wFormatTag = bUseWavExtensible ?
@@ -305,30 +304,11 @@ HRESULT CWavPackDSDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
     wfex.Format.wBitsPerSample = pwfxin->wBitsPerSample;
     wfex.Format.nBlockAlign = (unsigned short)((wfex.Format.nChannels * wfex.Format.wBitsPerSample) / 8);
     wfex.Format.nAvgBytesPerSec = wfex.Format.nSamplesPerSec * wfex.Format.nBlockAlign;
-    switch(pwfxin->nChannels)
-    {
-    case 1:
-        wfex.dwChannelMask = KSAUDIO_SPEAKER_MONO;      
-        break;
-    case 2:
-        wfex.dwChannelMask = KSAUDIO_SPEAKER_STEREO;
-        break;
-    case 3:
-        wfex.dwChannelMask = KSAUDIO_SPEAKER_STEREO | SPEAKER_FRONT_CENTER;
-        break;
-    case 4:
-        wfex.dwChannelMask = KSAUDIO_SPEAKER_QUAD;
-        break;
-    case 5:
-        wfex.dwChannelMask = KSAUDIO_SPEAKER_QUAD | SPEAKER_FRONT_CENTER;
-        break;
-    case 6:
-        wfex.dwChannelMask = KSAUDIO_SPEAKER_5POINT1;
-        break;
-    default:
+
+    if (pwfxin->nChannels < NUM_DEFAULT_CHANNEL_MASKS)
+        wfex.dwChannelMask = DefaultChannelMasks [pwfxin->nChannels];
+    else
         wfex.dwChannelMask = KSAUDIO_SPEAKER_DIRECTOUT; // XXX : or SPEAKER_ALL ??
-        break;
-    }
 
     if(pwfxin->cbSize >= sizeof (m_PrivateData))
         wfex.dwChannelMask = m_PrivateData.channel_mask;
