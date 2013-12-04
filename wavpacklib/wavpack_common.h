@@ -32,8 +32,10 @@ typedef unsigned char uchar;
 
 #ifdef _DEBUG
 void DebugLog(const char *pFormat,...);
+void DebugMemoryDump (void *data, int length, int bytes_per_line);
 #else
 #define DebugLog
+#define DebugMemoryDump
 #endif
 // <----- WIN32 -----
 
