@@ -69,7 +69,8 @@ static const DWORD DefaultChannelMasks [] = {
 
 // This structure was originally only 2 bytes and contained only the WavPack stream version.
 // It has now been expanded to 8 bytes to allow the splitter to communicate non-standard
-// channels masks and whether 32-bit audio data is float or int (WavPack supports both).
+// channels masks, whether 32-bit audio data is float or int (WavPack supports both), and the
+// special case of 2-channel files using separate blocks.
 
 typedef struct {
 	short version, flags;
@@ -77,6 +78,7 @@ typedef struct {
 } wavpack_codec_private_data;
 
 #define WPFLAGS_INT32DATA   0x1
+#define WPFLAGS_SEVERALBLKS 0x2
 
 // Flag that identify additionnal block data
 // It's correction data in case of WavPack

@@ -1092,6 +1092,9 @@ HRESULT CWavPackDSSplitterOutputPin::GetMediaType(int iPosition, CMediaType *pMe
     wavpack_codec_private_data wcpd = { wpp->wphdr.version, 0, wpp->channel_mask };
     int private_size = sizeof (wcpd);
 
+    if (wpp->channel_count == 2 && wpp->several_blocks)
+        wcpd.flags |= WPFLAGS_SEVERALBLKS;
+
     if (wpp->bits_per_sample == 32 && !(wpp->wphdr.flags & FLOAT_DATA))
         wcpd.flags |= WPFLAGS_INT32DATA;
     

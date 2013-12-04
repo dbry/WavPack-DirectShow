@@ -235,8 +235,8 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
         // finally add overhead of WavPack headers
 		wpp->suggested_buffer_size += (sizeof(WavpackHeader) * wpp->fb->nb_block);
 
-        DebugLog("wavpack_parser_new(): samples in first block = %d, suggested_buffer_size = %d",
-            wpp->block_samples_per_block, wpp->suggested_buffer_size);
+        DebugLog("wavpack_parser_new(): %d chans / %d block(s), samples / first block = %d, suggested_buffer_size = %d",
+            wpp->channel_count, wpp->fb->nb_block, wpp->block_samples_per_block, wpp->suggested_buffer_size);
 
 		return wpp;
 	}

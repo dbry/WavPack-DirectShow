@@ -526,6 +526,9 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
 
     WAVEFORMATEX* pwfx = (WAVEFORMATEX*)m_pInput->CurrentMediaType().Format();
     BOOL bSeveralBlocks = (pwfx->nChannels > 2);
+
+    if (pwfx->cbSize >= sizeof (m_PrivateData) && (m_PrivateData.flags & WPFLAGS_SEVERALBLKS))
+        bSeveralBlocks = TRUE;
  
     if(pProps->dwStreamId == AM_STREAM_MEDIA)
     {
