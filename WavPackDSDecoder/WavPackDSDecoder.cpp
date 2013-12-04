@@ -240,6 +240,13 @@ HRESULT CWavPackDSDecoder::CheckInputType(const CMediaType *mtIn)
     }
 
     WAVEFORMATEX *pwfxin = (WAVEFORMATEX*)mtIn->Format();    
+
+    // make sure we have at least the WavPack stream version, otherwise we may be attempting
+    // to hook up to the LAV splitter which should not work correctly (but sometimes does)
+
+    if (pwfxin->cbSize < 2)
+        return VFW_E_TYPE_NOT_ACCEPTED;    
+
     if((pwfxin->wBitsPerSample == 8) ||
         (pwfxin->wBitsPerSample == 16) ||
         (pwfxin->wBitsPerSample == 24) ||
