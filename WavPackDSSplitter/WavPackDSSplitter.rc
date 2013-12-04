@@ -27,8 +27,8 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,0,0
- PRODUCTVERSION 1,2,0,0
+ FILEVERSION 1,2,0,1
+ PRODUCTVERSION 1,2,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -46,12 +46,12 @@ BEGIN
             VALUE "Comments", "www.wavpack.com"
             VALUE "CompanyName", "-"
             VALUE "FileDescription", "WavPack Audio DirectShow Splitter"
-            VALUE "FileVersion", "1, 2, 0, 0"
+            VALUE "FileVersion", "1, 2, 0, 1"
             VALUE "InternalName", "WavPackDSSplitter"
             VALUE "LegalCopyright", "Copyright © 2005-2013"
             VALUE "OriginalFilename", "WavPackDSSplitter.ax"
             VALUE "ProductName", "WavPack Audio DirectShow Splitter"
-            VALUE "ProductVersion", "1, 2, 0, 0"
+            VALUE "ProductVersion", "1, 2, 0, 1"
         END
     END
     BLOCK "VarFileInfo"

@@ -139,8 +139,8 @@ IDB_BITMAP_LOGO_CORE    BITMAP                  "Resource\\CoreLogo16.bmp"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,0,0
- PRODUCTVERSION 1,2,0,0
+ FILEVERSION 1,2,0,1
+ PRODUCTVERSION 1,2,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -158,12 +158,12 @@ BEGIN
             VALUE "Comments", "www.wavpack.com"
             VALUE "CompanyName", "-"
             VALUE "FileDescription", "WavPack Audio DirectShow Decoder"
-            VALUE "FileVersion", "1, 2, 0, 0"
+            VALUE "FileVersion", "1, 2, 0, 1"
             VALUE "InternalName", "WavPackDSDecoder"
             VALUE "LegalCopyright", "Copyright © 2005-2013"
             VALUE "OriginalFilename", "WavPackDSDecoder.ax"
             VALUE "ProductName", "WavPack Audio DirectShow Decoder"
-            VALUE "ProductVersion", "1, 2, 0, 0"
+            VALUE "ProductVersion", "1, 2, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
