@@ -178,6 +178,41 @@ int reconstruct_wavpack_frame(
 
 // ----------------------------------------------------------------------------
 
+int verify_wavpack_frame(
+    common_frame_data *common_data,
+    char *pSrc,
+    uint32_t SrcLength)
+{
+    WavpackHeader header;
+    char *pBlock = pSrc;
+    int i = 0;
+
+    wp_memclear(common_data, sizeof(common_frame_data));
+
+    while(pBlock + sizeof (WavpackHeader) < pSrc + SrcLength && i < 10)
+    {
+        wp_memcpy (&header, pBlock, sizeof (header));
+
+        if (wp_memcmp (header.ckID, "wvpk", sizeof (header.ckID)))
+            return -1;
+
+        if (i == 0)
+            common_data->block_samples = header.block_samples;
+        else if (common_data->block_samples != header.block_samples)
+            return -1;
+
+        if ((pBlock += header.ckSize + 8) > pSrc + SrcLength)
+            return -1;
+
+        common_data->array_flags [i] = header.flags;
+        i++;
+    }
+
+    return i;
+}
+
+// ----------------------------------------------------------------------------
+
 int strip_wavpack_block(frame_buffer *frame,
                         WavpackHeader *wphdr,
                         WavpackStreamReader *io,

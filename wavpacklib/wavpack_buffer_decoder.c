@@ -13,7 +13,7 @@
 // ----------------------------------------------------------------------------
 
 void wavpack_buffer_format_samples(wavpack_buffer_decoder* wbd,
-                                   uchar *dst, long *src, uint32_t samples)
+                                   uchar *dst, long *src, uint32_t samples, int float32_output)
 {
     long temp;
     int bps = WavpackGetBytesPerSample(wbd->wpc);
@@ -42,6 +42,15 @@ void wavpack_buffer_format_samples(wavpack_buffer_decoder* wbd,
             *dst++ = (uchar)(temp >> 16);
         }
         
+        break;
+
+    case 4:
+        if (float32_output && !(WavpackGetMode (wbd->wpc) & MODE_FLOAT)) {
+            float *fdst = (float *) dst;
+
+            while (samcnt--)
+                *fdst++ = *src++ * 4.656612873077393e-10F;
+        }
         break;
     }
 }

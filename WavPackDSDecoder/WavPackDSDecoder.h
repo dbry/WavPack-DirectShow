@@ -80,6 +80,8 @@ private:
     int m_DecodedFrames;
     int m_CrcError;
     int m_DecodingMode;
+    int m_HeadersPresent;
+    int m_32bitFloatData;
 
     CCritSec    m_WPDSLock; // serialize access
 };

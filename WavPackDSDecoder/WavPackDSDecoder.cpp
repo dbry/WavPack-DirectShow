@@ -199,6 +199,8 @@ CWavPackDSDecoder::CWavPackDSDecoder(LPUNKNOWN lpunk, HRESULT *phr) :
     ,m_DecodedFrames(0)
     ,m_CrcError(0)
     ,m_DecodingMode(0)
+    ,m_HeadersPresent(0)
+    ,m_32bitFloatData(0)
 
 {
 
@@ -241,11 +243,15 @@ HRESULT CWavPackDSDecoder::CheckInputType(const CMediaType *mtIn)
 
     WAVEFORMATEX *pwfxin = (WAVEFORMATEX*)mtIn->Format();    
 
-    // make sure we have at least the WavPack stream version, otherwise we may be attempting
-    // to hook up to the LAV splitter which should not work correctly (but sometimes does)
+    // Currently we allow 3 values for cbSize:
+    //   0 indicates we are dealing with WavPack data with headers (perhaps from LAV splitter)
+    //   2 indicates Matroska-style WavPack data with stripped headers
+    //   8 also indicates stripped headers, but with flags and channel mask
 
-    if (pwfxin->cbSize < 2)
-        return VFW_E_TYPE_NOT_ACCEPTED;    
+    if (pwfxin->cbSize != 0 &&
+        pwfxin->cbSize != sizeof (m_PrivateData.version) &&
+        pwfxin->cbSize != sizeof (m_PrivateData))
+            return VFW_E_TYPE_NOT_ACCEPTED;    
 
     if((pwfxin->wBitsPerSample == 8) ||
         (pwfxin->wBitsPerSample == 16) ||
@@ -289,9 +295,14 @@ HRESULT CWavPackDSDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
         (pwfxin->wBitsPerSample == 24) ||
         (pwfxin->wBitsPerSample == 32);
     
+    // If 32-bit data, we default to outputting IEEE float data unless we specifically know that
+    // the data is 32-bit integers (which is less common). If we are wrong, and the data really
+    // is 32-bit integers, then we'll know this during decode and convert to float then.
+
     if(pwfxin->wBitsPerSample == 32 &&
         (pwfxin->cbSize < sizeof (m_PrivateData) || !(m_PrivateData.flags & WPFLAGS_INT32DATA)))
     {
+        m_32bitFloatData = TRUE;
         wfex.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
         wfex.Format.wFormatTag = bUseWavExtensible ?
             WAVE_FORMAT_EXTENSIBLE :
@@ -414,6 +425,8 @@ HRESULT CWavPackDSDecoder::SetMediaType(PIN_DIRECTION direction, const CMediaTyp
                 (char*)(pwfx+1),
                 min(sizeof(wavpack_codec_private_data),pwfx->cbSize));
         }
+        else
+            m_HeadersPresent = TRUE;    // no private data means headers must be present
 
         m_SamplesPerSec = pwfx->nSamplesPerSec;
         m_Channels = pwfx->nChannels;
@@ -548,14 +561,19 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
 
         m_MainBlockDiscontinuity = (pSample->IsDiscontinuity() == S_OK);
 
-        reconstruct_wavpack_frame(
-            m_MainFrame,
-            &m_CommonFrameData,
-            (char*)pSrc,
-            SrcLength,            
-            TRUE,
-            bSeveralBlocks,
-            m_PrivateData.version);
+        if (m_HeadersPresent) {
+            if (verify_wavpack_frame (&m_CommonFrameData, (char*)pSrc, SrcLength) == -1)            
+                return S_FALSE;
+        }
+        else
+            reconstruct_wavpack_frame(
+                m_MainFrame,
+                &m_CommonFrameData,
+                (char*)pSrc,
+                SrcLength,            
+                TRUE,
+                bSeveralBlocks,
+                m_PrivateData.version);
 
         if(m_HybridMode == TRUE)
         {
@@ -578,7 +596,15 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
             m_PrivateData.version);
     }
 
-    if(wavpack_buffer_decoder_load_frame(m_Codec, m_MainFrame->data, m_MainFrame->len,
+    if (m_HeadersPresent)
+    {
+        if(wavpack_buffer_decoder_load_frame(m_Codec, (char*)pSrc, SrcLength, NULL, 0) == 0)
+        {
+            // Something is wrong
+            return S_FALSE;
+        }
+    }
+    else if(wavpack_buffer_decoder_load_frame(m_Codec, m_MainFrame->data, m_MainFrame->len,
         m_HybridMode ? m_CorrectionFrame->data : NULL, m_CorrectionFrame->len) == 0)
     {
         // Something is wrong
@@ -625,7 +651,8 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
             wavpack_buffer_format_samples(m_Codec,
                 (uchar *) pDst,
                 (long*) pDst,
-                samples);
+                samples,
+                m_32bitFloatData);
             
             DstLength = samples *
                 WavpackGetBytesPerSample(m_Codec->wpc) *

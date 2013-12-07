@@ -51,6 +51,11 @@ int reconstruct_wavpack_frame(
     int several_blocks,
     int version);
 
+int verify_wavpack_frame(
+    common_frame_data *common_data,
+    char *pSrc,
+    uint32_t SrcLength);
+
 int strip_wavpack_block(frame_buffer *frame,
                         WavpackHeader *wphfr,
                         WavpackStreamReader *io,
