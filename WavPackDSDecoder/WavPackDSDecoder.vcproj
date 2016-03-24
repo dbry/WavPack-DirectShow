@@ -75,11 +75,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbasd.lib msvcrtd.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib"
+				AdditionalDependencies="strmbasd.lib msvcrtd.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib libwavpack.lib"
 				OutputFile="..\$(ConfigurationName)\WavPackDSDecoder.ax"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(ConfigurationName)&quot;"
+				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(ConfigurationName)&quot;;..\wavpack\lib"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\WavPackDSDecoder.def"
 				GenerateDebugInformation="true"
@@ -169,11 +169,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbasd.lib msvcrtd.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib"
+				AdditionalDependencies="strmbasd.lib msvcrtd.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib libwavpack.lib"
 				OutputFile="..\$(PlatformName)\$(ConfigurationName)\WavPackDSDecoder.ax"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(PlatformName)\$(ConfigurationName)&quot;"
+				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(PlatformName)\$(ConfigurationName)&quot;;..\wavpack\lib\x64"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\WavPackDSDecoder.def"
 				GenerateDebugInformation="true"
@@ -265,11 +265,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/debug:none /OPT:NOREF /OPT:ICF"
-				AdditionalDependencies="strmbase.lib msvcrt.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib"
+				AdditionalDependencies="strmbase.lib msvcrt.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib libwavpack.lib"
 				OutputFile="..\$(ConfigurationName)\WavPackDSDecoder.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(ConfigurationName)&quot;"
+				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(ConfigurationName)&quot;;..\wavpack\lib"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\WavPackDSDecoder.def"
 				StackReserveSize="2097152"
@@ -363,11 +363,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/debug:none /OPT:NOREF /OPT:ICF"
-				AdditionalDependencies="strmbase.lib msvcrt.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib"
+				AdditionalDependencies="strmbase.lib msvcrt.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib libwavpack.lib"
 				OutputFile="..\$(PlatformName)\$(ConfigurationName)\WavPackDSDecoder.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(PlatformName)\$(ConfigurationName)&quot;"
+				AdditionalLibraryDirectories="&quot;$(WindowsSdkDir)\Samples\multimedia\directshow\baseclasses\$(PlatformName)\$(ConfigurationName)&quot;;..\wavpack\lib\x64"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\WavPackDSDecoder.def"
 				StackReserveSize="2097152"
@@ -616,227 +616,6 @@
 			<File
 				RelativePath="..\wavpack\wavpack.h"
 				>
-			</File>
-		</Filter>
-		<Filter
-			Name="wavpack_lib_c"
-			Filter="c"
-			>
-			<File
-				RelativePath="..\wavpack\bits.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\wavpack\float.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\wavpack\metadata.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\wavpack\unpack.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\wavpack\words.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\wavpack\wputils.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
