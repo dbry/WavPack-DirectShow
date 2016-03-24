@@ -3,7 +3,7 @@
 ; ---------------------------------------------------------------------------
 
 !define NAME "CoreWavPack DirectShow Filters"
-!define VERSION "1.2.0"
+!define VERSION "1.3.0"
 !define OUTFILE "Release\CoreWavPack-${VERSION}-Setup.exe"
 !define INPUT_PATH "Release\"
 !define FILTER_FILE1 "WavPackDSDecoder.ax"
