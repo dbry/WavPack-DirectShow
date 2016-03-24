@@ -548,6 +548,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WavPackDS_GUID.h"
 				>
 			</File>

@@ -1,5 +1,6 @@
 #include <streams.h>
 #include "WavPackDSDecoderAboutProp.h"
+#include "..\wavpack\wavpack.h"
 #include "resource.h"
 
 //-----------------------------------------------------------------------------
@@ -78,6 +79,9 @@ HRESULT CWavPackDSDecoderAboutProp::OnActivate()
         GetDllVersion(szExeName));
 
 	SetDlgItemText(m_hwnd, IDC_LABEL_VERSION, version);
+
+    wsprintf(version, "WavPack Version %s", WavpackGetLibraryVersionString ());
+	SetDlgItemText(m_hwnd, IDC_LABEL_WAVPACK_VERSION, version);
 
 	return S_OK;
 }
