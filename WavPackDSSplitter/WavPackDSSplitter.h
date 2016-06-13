@@ -24,7 +24,7 @@
 //-----------------------------------------------------------------------------
 
 typedef struct {
-    WavpackStreamReader iocallback;
+    WavpackStreamReader64 iocallback;
     IAsyncReader *pReader;
     LONGLONG StreamPos;
     LONGLONG StreamLen;

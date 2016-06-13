@@ -12,7 +12,7 @@
 // ----------------------------------------------------------------------------
 
 typedef struct {
-    WavpackStreamReader* io;
+    WavpackStreamReader64* io;
     int wvparser_eof;
     int is_correction;
 
@@ -44,13 +44,13 @@ extern "C" {
 // ----------------------------------------------------------------------------
 
 
-WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction);
+WavPack_parser* wavpack_parser_new(WavpackStreamReader64* io, int is_correction);
 
 unsigned long wavpack_parser_read_frame(
     WavPack_parser* wpp,
     unsigned char* dst,
-    unsigned long* FrameIndex,
-    unsigned long* FrameLen);
+    int64_t* FrameIndex,
+    int64_t* FrameLen);
 
 void wavpack_parser_seek(WavPack_parser* wpp, uint64 seek_pos_100ns);
 

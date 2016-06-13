@@ -38,7 +38,7 @@ void frame_buffer_free(frame_buffer* fb);
 int frame_reserve_space(frame_buffer* dst, int len);
 
 int frame_append_data(frame_buffer* dst, char* src, int len);
-int frame_append_data2(frame_buffer* dst, WavpackStreamReader *io, int len);
+int frame_append_data2(frame_buffer* dst, WavpackStreamReader64 *io, int len);
 
 void frame_reset(frame_buffer* dst);
 
@@ -58,7 +58,7 @@ int verify_wavpack_frame(
 
 int strip_wavpack_block(frame_buffer *frame,
                         WavpackHeader *wphfr,
-                        WavpackStreamReader *io,
+                        WavpackStreamReader64 *io,
                         uint32_t block_data_size,
                         int is_main_frame,
                         int several_blocks);

@@ -6,7 +6,7 @@
 // Distributed under the BSD Software License
 // ----------------------------------------------------------------------------
 
-#include "../wavpack/wavpack_local.h"
+#include "../wavpack/wavpack.h"
 #include "wavpack_common.h"
 #include "wavpack_frame.h"
 #include "wavpack_parser.h"
@@ -15,20 +15,20 @@
 
 int add_block(WavPack_parser* wpp, uint32_t block_data_size);
 
-static uint32_t find_sample(WavPack_parser* wpp,
-							uint32_t header_pos,
-							uint32_t sample);
+static int64_t find_sample(WavPack_parser* wpp,
+							int64_t header_pos,
+							int64_t sample);
 
-static uint32_t find_header (WavpackStreamReader *reader,
+static int64_t find_header (WavpackStreamReader64 *reader,
 							 void *id,
-							 uint32_t filepos,
+							 int64_t filepos,
 							 WavpackHeader *wphdr);
 
 int32_t get_wp_block(WavPack_parser *wpp,
 					 int* is_final_block);
 
 
-static uint32_t seek_final_index (WavpackStreamReader *reader, void *id);
+static int64_t seek_final_index (WavpackStreamReader64 *reader, void *id);
 
 // ----------------------------------------------------------------------------
 
@@ -38,6 +38,14 @@ const uint32_t sample_rates [] = { 6000, 8000, 9600, 11025, 12000, 16000, 22050,
 24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000 };
 
 // ----------------------------------------------------------------------------
+
+// This is a local representation of metadata a metadata block
+
+typedef struct {
+    int32_t byte_length;
+    void *data;
+    unsigned char id;
+} WavpackMetadata;
 
 static int my_read_metadata_buff (WavpackMetadata *wpmd,
 						   uchar **buffptr,
@@ -140,7 +148,7 @@ static void my_scan_metadata (WavPack_parser *wpp, uchar* blockbuff, uint32_t le
 
 // ----------------------------------------------------------------------------
 
-WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
+WavPack_parser* wavpack_parser_new(WavpackStreamReader64* io, int is_correction)
 {
 	uint32_t bcount = 0;
 	int is_final_block = FALSE;
@@ -182,14 +190,14 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
 			wpp->sample_rate = wpp->block_sample_rate;
 
 			// Make sure we have the total number of samples
-			if(wpp->first_wphdr.total_samples == (uint32_t)-1)
+			if(GET_TOTAL_SAMPLES (wpp->first_wphdr) == -1)
 			{
 				// Seek at the end of the file to guess total_samples
-				uint32_t curr_pos = wpp->io->get_pos(wpp->io);
-				uint32_t final_index = seek_final_index (wpp->io, wpp->io);
-				if (final_index != (uint32_t) -1)
+				int64_t curr_pos = wpp->io->get_pos(wpp->io);
+				int64_t final_index = seek_final_index (wpp->io, wpp->io);
+				if (final_index != -1)
 				{
-					wpp->first_wphdr.total_samples = final_index - wpp->first_wphdr.block_index;
+					SET_TOTAL_SAMPLES (wpp->first_wphdr, final_index - GET_BLOCK_INDEX (wpp->first_wphdr));
 				}				 
 				// restaure position
 				wpp->io->set_pos_abs(wpp->io, curr_pos);
@@ -252,8 +260,8 @@ WavPack_parser* wavpack_parser_new(WavpackStreamReader* io, int is_correction)
 unsigned long wavpack_parser_read_frame(
 	WavPack_parser* wpp,
 	unsigned char* dst,
-	unsigned long* FrameIndex,
-	unsigned long* FrameLen)
+	int64_t* FrameIndex,
+	int64_t* FrameLen)
 {
 	int is_final_block = FALSE;
 	uint32_t bcount = 0;
@@ -261,7 +269,7 @@ unsigned long wavpack_parser_read_frame(
 
 	if(wpp->fb->len > 0)
 	{
-		*FrameIndex = wpp->wphdr.block_index;
+		*FrameIndex = GET_BLOCK_INDEX (wpp->wphdr);
 		*FrameLen = wpp->wphdr.block_samples;		 
 		wp_memcpy(dst, wpp->fb->data, wpp->fb->len);
 	}
@@ -279,7 +287,7 @@ unsigned long wavpack_parser_read_frame(
 				!wpp->is_correction,  wpp->several_blocks);
 		} while(is_final_block == FALSE);
 
-		*FrameIndex = wpp->wphdr.block_index;
+		*FrameIndex = GET_BLOCK_INDEX (wpp->wphdr);
 		*FrameLen = wpp->wphdr.block_samples;
 		wp_memcpy(dst, wpp->fb->data, wpp->fb->len);
 	}
@@ -296,10 +304,10 @@ unsigned long wavpack_parser_read_frame(
 
 void wavpack_parser_seek(WavPack_parser* wpp, uint64 seek_pos_100ns)
 {
-	uint32_t sample_pos = (uint32_t)((seek_pos_100ns / 10000000.0) * wpp->sample_rate);
-	uint32_t newpos = find_sample(wpp, 0, sample_pos);
+	int64_t sample_pos = (int64_t)((seek_pos_100ns / 10000000.0) * wpp->sample_rate);
+	int64_t newpos = find_sample(wpp, 0, sample_pos);
 
-	DebugLog("%c wavpack_parser_seek : seeking at pos = %d",
+	DebugLog("%c wavpack_parser_seek : seeking at pos = %lld",
 		wpp->is_correction ? 'C': 'N',
 		newpos);
 
@@ -378,7 +386,7 @@ little_endian_to_native(void *data, char *format)
 // to indicate the error. No additional bytes are read past the header and it
 // is returned in the processor's native endian mode. Seeking is not required.
 
-static uint32_t read_next_header (WavpackStreamReader *reader, void *id, WavpackHeader *wphdr)
+static uint32_t read_next_header (WavpackStreamReader64 *reader, void *id, WavpackHeader *wphdr)
 {
 	char buffer [sizeof (*wphdr)], *sp = buffer + sizeof (*wphdr), *ep = sp;
 	uint32_t bytes_skipped = 0;
@@ -431,7 +439,7 @@ get_wp_block(WavPack_parser *wpp, int* is_final_block)
 	wpp->block_bits_per_sample = 0;
 	wpp->block_samples_per_block = 0;
 	
-	DebugLog("%c get_wp_block : current pos = %d",
+	DebugLog("%c get_wp_block : current pos = %lld",
 		wpp->is_correction ? 'C' : 'N',
 		wpp->io->get_pos(wpp->io));
 
@@ -499,14 +507,14 @@ get_wp_block(WavPack_parser *wpp, int* is_final_block)
 
 #define BUFSIZE 4096
 
-static uint32_t find_header (WavpackStreamReader *reader,
+static int64_t find_header (WavpackStreamReader64 *reader,
 							 void *id,
-							 uint32_t filepos,
+							 int64_t filepos,
 							 WavpackHeader *wphdr)
 {
 	char *buffer = wp_alloc(BUFSIZE), *sp = buffer, *ep = buffer;
 	
-	if (filepos != (uint32_t) -1 && reader->set_pos_abs(id, filepos)) {
+	if (filepos != -1 && reader->set_pos_abs(id, filepos)) {
 		wp_free(buffer);
 		return -1;
 	}
@@ -523,7 +531,7 @@ static uint32_t find_header (WavpackStreamReader *reader,
 		else {
 			if (sp > ep)
 			{
-				if (reader->set_pos_rel (id, (int32_t)(sp - ep), SEEK_CUR)) {
+				if (reader->set_pos_rel (id, (int64_t)(sp - ep), SEEK_CUR)) {
 					wp_free(buffer);
 					return -1;
 				}
@@ -549,7 +557,7 @@ static uint32_t find_header (WavpackStreamReader *reader,
 				
 				if (wphdr->block_samples && (wphdr->flags & INITIAL_BLOCK)) {
 					wp_free(buffer);
-					return (uint32_t) (reader->get_pos (id) - (ep - sp + 4));
+					return reader->get_pos (id) - (ep - sp + 4);
 				}
 				
 				if (wphdr->ckSize > 1024)
@@ -569,25 +577,25 @@ static uint32_t find_header (WavpackStreamReader *reader,
 // or below that point. If a .wvc file is being used, then this must be called
 // for that file also.
 
-static uint32_t find_sample(WavPack_parser* wpp,
-							uint32_t header_pos,
-							uint32_t sample)
+static int64_t find_sample(WavPack_parser* wpp,
+							int64_t header_pos,
+							int64_t sample)
 {
-	uint32_t file_pos1 = 0, file_pos2 = wpp->io->get_length(wpp->io);
-	uint32_t sample_pos1 = 0, sample_pos2 = wpp->first_wphdr.total_samples;
+	int64_t file_pos1 = 0, file_pos2 = wpp->io->get_length(wpp->io);
+	int64_t sample_pos1 = 0, sample_pos2 = GET_TOTAL_SAMPLES (wpp->first_wphdr);
 	double ratio = 0.96;
 	int file_skip = 0;
 
-	if (sample >= wpp->first_wphdr.total_samples)
+	if (sample >= GET_TOTAL_SAMPLES (wpp->first_wphdr))
 		return -1;
 
 	if (header_pos && wpp->wphdr.block_samples) {
-		if (wpp->wphdr.block_index > sample) {
-			sample_pos2 = wpp->wphdr.block_index;
+		if (GET_BLOCK_INDEX (wpp->wphdr) > sample) {
+			sample_pos2 = GET_BLOCK_INDEX (wpp->wphdr);
 			file_pos2 = header_pos;
 		}
-		else if (wpp->wphdr.block_index + wpp->wphdr.block_samples <= sample) {
-			sample_pos1 = wpp->wphdr.block_index;
+		else if (GET_BLOCK_INDEX (wpp->wphdr) + wpp->wphdr.block_samples <= sample) {
+			sample_pos1 = GET_BLOCK_INDEX (wpp->wphdr);
 			file_pos1 = header_pos;
 		}
 		else
@@ -596,18 +604,18 @@ static uint32_t find_sample(WavPack_parser* wpp,
 
 	while (1) {
 		double bytes_per_sample;
-		uint32_t seek_pos;
+		int64_t seek_pos;
 
-		bytes_per_sample = file_pos2 - file_pos1;
+		bytes_per_sample = (double) (file_pos2 - file_pos1);
 		bytes_per_sample /= sample_pos2 - sample_pos1;
 		seek_pos = file_pos1 + (file_skip ? 32 : 0);
-		seek_pos += (uint32_t)(bytes_per_sample * (sample - sample_pos1) * ratio);
+		seek_pos += (int64_t)(bytes_per_sample * (sample - sample_pos1) * ratio);
 		seek_pos = find_header(wpp->io, wpp->io, seek_pos, &wpp->wphdr);
 
 		//if (seek_pos != (uint32_t) -1)
 		//	  wpp->wphdr.block_index -= wpc->initial_index; // todo
 
-		if (seek_pos == (uint32_t) -1 || seek_pos >= file_pos2) {
+		if (seek_pos == -1 || seek_pos >= file_pos2) {
 			if (ratio > 0.0) {
 				if ((ratio -= 0.24) < 0.0) {
 					ratio = 0.0;
@@ -616,15 +624,15 @@ static uint32_t find_sample(WavPack_parser* wpp,
 			else
 				return -1;
 		}
-		else if (wpp->wphdr.block_index > sample) {
-			sample_pos2 = wpp->wphdr.block_index;
+		else if (GET_BLOCK_INDEX (wpp->wphdr) > sample) {
+			sample_pos2 = GET_BLOCK_INDEX (wpp->wphdr);
 			file_pos2 = seek_pos;
 		}
-		else if (wpp->wphdr.block_index + wpp->wphdr.block_samples <= sample) {
+		else if (GET_BLOCK_INDEX (wpp->wphdr) + wpp->wphdr.block_samples <= sample) {
 			if (seek_pos == file_pos1)
 				file_skip = 1;
 			else {
-				sample_pos1 = wpp->wphdr.block_index;
+				sample_pos1 = GET_BLOCK_INDEX (wpp->wphdr);
 				file_pos1 = seek_pos;
 			}
 		} else {	   
@@ -643,9 +651,9 @@ static uint32_t find_sample(WavPack_parser* wpp,
 // pointer undefined. A return value of -1 indicates the length could not
 // be determined.
 
-static uint32_t seek_final_index (WavpackStreamReader *reader, void *id)
+static int64_t seek_final_index (WavpackStreamReader64 *reader, void *id)
 {
-	uint32_t result = (uint32_t) -1, bcount;
+	int64_t result = -1, bcount;
 	WavpackHeader wphdr;
 	uchar *tempbuff;
 	
@@ -669,7 +677,7 @@ static uint32_t seek_final_index (WavpackStreamReader *reader, void *id)
 		wp_free (tempbuff);
 
 		if (wphdr.block_samples && (wphdr.flags & FINAL_BLOCK))
-			result = wphdr.block_index + wphdr.block_samples;
+			result = GET_BLOCK_INDEX (wphdr) + wphdr.block_samples;
 	}
 }
 

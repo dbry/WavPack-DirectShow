@@ -737,7 +737,7 @@ HRESULT CWavPackDSSplitterInputPin::CompleteConnect(IPin *pReceivePin)
         wavpack_parser_free(m_pWavPackParser);
 		m_pWavPackParser = NULL;
 	}
-    m_pWavPackParser = wavpack_parser_new((WavpackStreamReader*)m_pIACBW, FALSE);
+    m_pWavPackParser = wavpack_parser_new((WavpackStreamReader64*)m_pIACBW, FALSE);
     if(!m_pWavPackParser)
     {
         DebugLog("CWavPackDSSplitterInputPin::CompleteConnect wavpack_parser_new failed 0x%08X", GetCurrentThreadId());
@@ -746,7 +746,7 @@ HRESULT CWavPackDSSplitterInputPin::CompleteConnect(IPin *pReceivePin)
     
     // Compute total duration
     REFERENCE_TIME rtDuration;
-    rtDuration = m_pWavPackParser->first_wphdr.total_samples;
+    rtDuration = GET_TOTAL_SAMPLES (m_pWavPackParser->first_wphdr);
     rtDuration = (rtDuration * 10000000) / m_pWavPackParser->sample_rate;
     m_pParentFilter->SetDuration(rtDuration);
 
@@ -800,7 +800,8 @@ HRESULT CWavPackDSSplitterInputPin::DeliverOneFrame(WavPack_parser* wpp)
     IMediaSample *pSample;
     BYTE *Buffer = NULL;
     HRESULT hr;
-    unsigned long FrameLenBytes = 0, FrameLenSamples = 0, FrameIndex = 0;
+    int64_t FrameLenSamples = 0, FrameIndex = 0;
+    unsigned long FrameLenBytes = 0;
 
     // Get a new media sample
     hr = m_pParentFilter->m_pOutputPin->GetDeliveryBuffer(&pSample, NULL, NULL, 0); 
@@ -1417,15 +1418,15 @@ int32_t IAsyncCallBackWrapper_read_bytes(void *id, void *data, int32_t bcount)
 
 // ----------------------------------------------------------------------------
 
-uint32_t IAsyncCallBackWrapper_get_pos(void *id)
+int64_t IAsyncCallBackWrapper_get_pos(void *id)
 {
 	IAsyncCallBackWrapper* iacbw = (IAsyncCallBackWrapper*)id;
-	return (uint32_t)iacbw->StreamPos;
+	return iacbw->StreamPos;
 }
 
 // ----------------------------------------------------------------------------
 
-int IAsyncCallBackWrapper_set_pos_abs(void *id, uint32_t pos)
+int IAsyncCallBackWrapper_set_pos_abs(void *id, int64_t pos)
 {
 	IAsyncCallBackWrapper* iacbw = (IAsyncCallBackWrapper*)id;
 	iacbw->StreamPos = min(pos, iacbw->StreamLen);
@@ -1441,7 +1442,7 @@ int IAsyncCallBackWrapper_set_pos_abs(void *id, uint32_t pos)
 
 // ----------------------------------------------------------------------------
 
-int IAsyncCallBackWrapper_set_pos_rel(void *id, int32_t delta, int mode)
+int IAsyncCallBackWrapper_set_pos_rel(void *id, int64_t delta, int mode)
 {
     IAsyncCallBackWrapper* iacbw = (IAsyncCallBackWrapper*)id;
     LONGLONG newPos = 0;
@@ -1480,10 +1481,10 @@ int IAsyncCallBackWrapper_push_back_byte(void *id, int c)
 
 // ----------------------------------------------------------------------------
 
-uint32_t IAsyncCallBackWrapper_get_length(void *id)
+int64_t IAsyncCallBackWrapper_get_length(void *id)
 {
 	IAsyncCallBackWrapper* iacbw = (IAsyncCallBackWrapper*)id;
-	return (uint32_t)iacbw->StreamLen;
+	return iacbw->StreamLen;
 }
 
 // ----------------------------------------------------------------------------
@@ -1640,7 +1641,7 @@ HRESULT CWavPackDSSplitterCorrectionInputPin::CompleteConnect(IPin *pReceivePin)
         wavpack_parser_free(m_pWavPackParser);
 		m_pWavPackParser = NULL;
 	}
-    m_pWavPackParser = wavpack_parser_new((WavpackStreamReader*)m_pIACBW, TRUE);
+    m_pWavPackParser = wavpack_parser_new((WavpackStreamReader64*)m_pIACBW, TRUE);
     if(!m_pWavPackParser)
     {
         return E_FAIL;

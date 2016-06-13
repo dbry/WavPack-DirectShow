@@ -73,7 +73,7 @@ int frame_append_data(frame_buffer* dst, char* src, int len)
 
 // ----------------------------------------------------------------------------
 
-int frame_append_data2(frame_buffer* dst, WavpackStreamReader *io, int len)
+int frame_append_data2(frame_buffer* dst, WavpackStreamReader64 *io, int len)
 {
     frame_reserve_space(dst, len);
     
@@ -160,7 +160,7 @@ int reconstruct_wavpack_frame(
         wp_memcpy(header.ckID, "wvpk", 4);
         header.ckSize = block_size + sizeof(WavpackHeader) - 8;
         header.version = version;
-        header.total_samples = -1;
+        SET_TOTAL_SAMPLES (header, -1);
         header.block_samples = common_data->block_samples;
         header.flags = current_flag;
         header.crc = current_crc;
@@ -215,7 +215,7 @@ int verify_wavpack_frame(
 
 int strip_wavpack_block(frame_buffer *frame,
                         WavpackHeader *wphdr,
-                        WavpackStreamReader *io,
+                        WavpackStreamReader64 *io,
                         uint32_t block_data_size,
                         int is_main_frame,
                         int several_blocks)
