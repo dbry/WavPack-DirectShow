@@ -247,7 +247,7 @@ int wavpack_buffer_decoder_load_frame(wavpack_buffer_decoder* wbd,
             (WavpackStreamReader*)wbd->fsr,
             wbd->fsr,
             (correction_data != NULL) ? wbd->fsrc : NULL,
-            wbd->wavpack_error_msg, OPEN_STREAMING|OPEN_NORMALIZE, 0);
+            wbd->wavpack_error_msg, OPEN_STREAMING|OPEN_NO_CHECKSUM|OPEN_NORMALIZE, 0);
     }
 
     return (wbd->wpc != NULL);

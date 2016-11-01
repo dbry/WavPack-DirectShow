@@ -132,13 +132,16 @@ typedef struct {
 #define SRATE_MASK      (0xfL << SRATE_LSB)
 
 #define FALSE_STEREO    0x40000000      // block is stereo, but data is mono
-
-#define IGNORED_FLAGS   0x18000000      // reserved, but ignore if encountered
 #define NEW_SHAPING     0x20000000      // use IIR filter for negative shaping
-#define UNKNOWN_FLAGS   0x80000000      // also reserved, but refuse decode if
-                                        //  encountered
 
 #define MONO_DATA (MONO_FLAG | FALSE_STEREO)
+
+// Introduced in WavPack 5.0:
+#define HAS_CHECKSUM    0x10000000      // block contains a trailing checksum
+#define DSD_FLAG        0x80000000      // block is encoded DSD (1-bit PCM)
+
+#define IGNORED_FLAGS   0x08000000      // reserved, but ignore if encountered
+#define UNKNOWN_FLAGS   0x00000000      // we no longer have any of these spares
 
 #define MIN_STREAM_VERS     0x402       // lowest stream version we'll decode
 #define MAX_STREAM_VERS     0x410       // highest stream version we'll decode or encode
@@ -175,6 +178,7 @@ typedef struct {
 #define ID_ALT_EXTENSION        (ID_OPTIONAL_DATA | 0x8)
 #define ID_ALT_MD5_CHECKSUM     (ID_OPTIONAL_DATA | 0x9)
 #define ID_NEW_CONFIG_BLOCK     (ID_OPTIONAL_DATA | 0xa)
+#define ID_BLOCK_CHECKSUM       (ID_OPTIONAL_DATA | 0xf)
 
 ///////////////////////// WavPack Configuration ///////////////////////////////
 
@@ -215,7 +219,7 @@ typedef struct {
 #define CONFIG_OPTIMIZE_MONO    0x80000000 // optimize for mono streams posing as stereo
 
 // The lower 8 bits of qmode indicate the use of new features in version 5 that (presently)
-// only apply to Core Audio Files (CAF), but could apply to other things and file types.
+// only apply to Core Audio Files (CAF) and DSD files, but could apply to other things too.
 // These flags are stored in the file and can be retrieved by a decoder that is aware of
 // them, but the individual bits are meaningless to the library. If ANY of these bits are
 // set then the MD5 sum is written with a new ID so that old decoders will not see it
@@ -225,6 +229,10 @@ typedef struct {
 #define QMODE_SIGNED_BYTES      0x2     // 8-bit audio data is signed (opposite of WAV format)
 #define QMODE_UNSIGNED_WORDS    0x4     // audio data (other than 8-bit) is unsigned (opposite of WAV format)
 #define QMODE_REORDERED_CHANS   0x8     // source channels were not Microsoft order, so they were reordered
+#define QMODE_DSD_LSB_FIRST     0x10    // DSD bytes, LSB first (most Sony .dsf files)
+#define QMODE_DSD_MSB_FIRST     0x20    // DSD bytes, MSB first (Philips .dff files)
+#define QMODE_DSD_IN_BLOCKS     0x40    // DSD data is blocked by channels (Sony .dsf only)
+#define QMODE_DSD_AUDIO         (QMODE_DSD_LSB_FIRST | QMODE_DSD_MSB_FIRST)
 
 // The rest of the qmode word is reserved for the private use of the command-line programs
 // and are ignored by the library (and not stored either). They really should not be defined
@@ -293,6 +301,15 @@ WavpackContext *WavpackOpenFileInput (const char *infilename, char *error, int f
 #define OPEN_EDIT_TAGS  0x40    // allow editing of tags
 #define OPEN_FILE_UTF8  0x80    // assume filenames are UTF-8 encoded, not ANSI (Windows only)
 
+// new for version 5
+
+#define OPEN_DSD_NATIVE 0x100   // open DSD files as bitstreams
+                                // (returned as 8-bit "samples" stored in 32-bit words)
+#define OPEN_DSD_AS_PCM 0x200   // open DSD files as 24-bit PCM (decimated 8x)
+#define OPEN_ALT_TYPES  0x400   // application is aware of alternate file types & qmode
+                                // (just affects retrieving wrappers & MD5 checksums)
+#define OPEN_NO_CHECKSUM 0x800  // don't verify block checksums before decoding
+
 int WavpackGetMode (WavpackContext *wpc);
 
 #define MODE_WVC        0x1
@@ -310,6 +327,8 @@ int WavpackGetMode (WavpackContext *wpc);
 #define MODE_XMODE      0x7000  // mask for extra level (1-6, 0=unknown)
 #define MODE_DNS        0x8000
 
+int WavpackVerifySingleBlock (unsigned char *buffer, int verify_checksum);
+int WavpackGetQualifyMode (WavpackContext *wpc);
 char *WavpackGetErrorMessage (WavpackContext *wpc);
 int WavpackGetVersion (WavpackContext *wpc);
 char *WavpackGetFileExtension (WavpackContext *wpc);
@@ -325,6 +344,7 @@ int WavpackSeekSample (WavpackContext *wpc, uint32_t sample);
 int WavpackSeekSample64 (WavpackContext *wpc, int64_t sample);
 WavpackContext *WavpackCloseFile (WavpackContext *wpc);
 uint32_t WavpackGetSampleRate (WavpackContext *wpc);
+uint32_t WavpackGetNativeSampleRate (WavpackContext *wpc);
 int WavpackGetBitsPerSample (WavpackContext *wpc);
 int WavpackGetBytesPerSample (WavpackContext *wpc);
 int WavpackGetNumChannels (WavpackContext *wpc);
@@ -332,6 +352,7 @@ int WavpackGetChannelMask (WavpackContext *wpc);
 int WavpackGetReducedChannels (WavpackContext *wpc);
 int WavpackGetFloatNormExp (WavpackContext *wpc);
 int WavpackGetMD5Sum (WavpackContext *wpc, unsigned char data [16]);
+void WavpackGetChannelIdentities (WavpackContext *wpc, unsigned char *identities);
 uint32_t WavpackGetChannelLayout (WavpackContext *wpc, unsigned char *reorder);
 uint32_t WavpackGetWrapperBytes (WavpackContext *wpc);
 unsigned char *WavpackGetWrapperData (WavpackContext *wpc);
@@ -360,9 +381,11 @@ void WavpackSetFileInformation (WavpackContext *wpc, char *file_extension, unsig
 #define WP_FORMAT_WAV   0       // Microsoft RIFF, including BWF and RF64 varients
 #define WP_FORMAT_W64   1       // Sony Wave64
 #define WP_FORMAT_CAF   2       // Apple CoreAudio
+#define WP_FORMAT_DFF   3       // Philips DSDIFF
+#define WP_FORMAT_DSF   4       // Sony DSD Format
 
 int WavpackSetConfiguration (WavpackContext *wpc, WavpackConfig *config, uint32_t total_samples);
-int WavpackSetConfiguration64 (WavpackContext *wpc, WavpackConfig *config, int64_t total_samples);
+int WavpackSetConfiguration64 (WavpackContext *wpc, WavpackConfig *config, int64_t total_samples, const unsigned char *chan_ids);
 int WavpackSetChannelLayout (WavpackContext *wpc, uint32_t layout_tag, const unsigned char *reorder);
 int WavpackAddWrapper (WavpackContext *wpc, void *data, uint32_t bcount);
 int WavpackStoreMD5Sum (WavpackContext *wpc, unsigned char data [16]);
