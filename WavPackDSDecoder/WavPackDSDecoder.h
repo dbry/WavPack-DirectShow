@@ -59,7 +59,6 @@ public :
     STDMETHODIMP get_DecodingMode(int *decoding_mode);
 
 private:
-    wavpack_buffer_decoder* m_Codec;	
 	REFERENCE_TIME m_rtFrameStart;
 	__int64 m_TotalSamples;
 	long m_SamplesPerBuffer;
@@ -70,9 +69,7 @@ private:
 	BOOL m_HybridMode;
 
     common_frame_data m_CommonFrameData;
-    frame_buffer* m_MainFrame;
-    frame_buffer* m_CorrectionFrame;
-
+    char* m_MainFrameData;
 
     int m_SamplesPerSec;
     int m_Channels;
@@ -82,6 +79,7 @@ private:
     int m_DecodingMode;
     int m_HeadersPresent;
     int m_32bitFloatData;
+    int m_MainFrameSize;
 
     CCritSec    m_WPDSLock; // serialize access
 };

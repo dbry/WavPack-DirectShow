@@ -12,12 +12,12 @@
 
 // ----------------------------------------------------------------------------
 
-void wavpack_buffer_format_samples(wavpack_buffer_decoder* wbd,
+void wavpack_buffer_format_samples(WavpackContext *wpc,
                                    uchar *dst, long *src, uint32_t samples, int float32_output)
 {
     long temp;
-    int bps = WavpackGetBytesPerSample(wbd->wpc);
-    uint32_t samcnt = samples * WavpackGetNumChannels (wbd->wpc);
+    int bps = WavpackGetBytesPerSample(wpc);
+    uint32_t samcnt = samples * WavpackGetNumChannels (wpc);
 
     switch (bps) {
         
@@ -45,7 +45,7 @@ void wavpack_buffer_format_samples(wavpack_buffer_decoder* wbd,
         break;
 
     case 4:
-        if (float32_output && !(WavpackGetMode (wbd->wpc) & MODE_FLOAT)) {
+        if (float32_output && !(WavpackGetMode (wpc) & MODE_FLOAT)) {
             float *fdst = (float *) dst;
 
             while (samcnt--)

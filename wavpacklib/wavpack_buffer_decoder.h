@@ -45,7 +45,7 @@ uint32_t wavpack_buffer_decoder_unpack(wavpack_buffer_decoder* wbd,
 
 void wavpack_buffer_decoder_free(wavpack_buffer_decoder* wbd);
 
-void wavpack_buffer_format_samples(wavpack_buffer_decoder* wbd,
+void wavpack_buffer_format_samples(WavpackContext *wpc,
                                    uchar *dst, long *src, uint32_t samples, int float32_output);
 
 

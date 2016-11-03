@@ -188,13 +188,11 @@ CUnknown *WINAPI CWavPackDSDecoder::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 
 CWavPackDSDecoder::CWavPackDSDecoder(LPUNKNOWN lpunk, HRESULT *phr) :
     CTransformFilter(NAME("CWavPackDSDecoder"), lpunk, CLSID_WavPackDSDecoder)
-    ,m_Codec(NULL)
     ,m_rtFrameStart(0)
     ,m_TotalSamples(0)
     ,m_SamplesPerBuffer(0)
     ,m_HybridMode(FALSE)
-    ,m_MainFrame(NULL)
-    ,m_CorrectionFrame(NULL)
+    ,m_MainFrameData(NULL)
     ,m_MainBlockDiscontinuity(TRUE)
     ,m_DecodedFrames(0)
     ,m_CrcError(0)
@@ -210,11 +208,6 @@ CWavPackDSDecoder::CWavPackDSDecoder(LPUNKNOWN lpunk, HRESULT *phr) :
 
 CWavPackDSDecoder::~CWavPackDSDecoder()
 {
-    if(m_Codec)
-    {
-        wavpack_buffer_decoder_free(m_Codec);
-        m_Codec = NULL;
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -457,33 +450,6 @@ HRESULT CWavPackDSDecoder::StartStreaming()
     m_DecodedFrames = 0;
     m_CrcError = 0;
 
-    if(m_Codec)
-    {
-        wavpack_buffer_decoder_free(m_Codec);
-        m_Codec = NULL;
-    }
-    
-    if(m_MainFrame)
-    {
-        frame_buffer_free(m_MainFrame);
-        m_MainFrame = NULL;
-    }
-    
-    if(m_CorrectionFrame)
-    {
-        frame_buffer_free(m_CorrectionFrame);
-        m_CorrectionFrame = NULL;
-    }
-
-    m_Codec = wavpack_buffer_decoder_new();
-    m_MainFrame = frame_buffer_new();
-    m_CorrectionFrame = frame_buffer_new();
-    
-    if(m_Codec == NULL || m_MainFrame == NULL || m_CorrectionFrame == NULL)
-    {
-        hr = E_OUTOFMEMORY;
-    }
-
     return hr;
 }
 
@@ -493,22 +459,9 @@ HRESULT CWavPackDSDecoder::StopStreaming()
 {
     HRESULT hr = CTransformFilter::StopStreaming();
 
-    if(m_Codec)
-    {
-        wavpack_buffer_decoder_free(m_Codec);
-        m_Codec = NULL;
-    }
-
-    if(m_MainFrame)
-    {
-        frame_buffer_free(m_MainFrame);
-        m_MainFrame = NULL;
-    }
-
-    if(m_CorrectionFrame)
-    {
-        frame_buffer_free(m_CorrectionFrame);
-        m_CorrectionFrame = NULL;
+    if (m_MainFrameData) {
+        delete [] m_MainFrameData;
+        m_MainFrameData = NULL;
     }
 
     return hr;
@@ -561,60 +514,50 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
 
         m_MainBlockDiscontinuity = (pSample->IsDiscontinuity() == S_OK);
 
-        if (m_HeadersPresent) {
-            if (verify_wavpack_frame (&m_CommonFrameData, (char*)pSrc, SrcLength) == -1)            
-                return S_FALSE;
-        }
-        else
-            reconstruct_wavpack_frame(
-                m_MainFrame,
-                &m_CommonFrameData,
-                (char*)pSrc,
-                SrcLength,            
-                TRUE,
-                bSeveralBlocks,
-                m_PrivateData.version);
-
         if(m_HybridMode == TRUE)
         {
-            // Stop here and wait for correction data
+            // save the main data and stop here to wait for correction data
+            if (m_MainFrameData) delete [] m_MainFrameData;
+            m_MainFrameData = new char [m_MainFrameSize = SrcLength];
+
+            if (!m_MainFrameData)
+                return S_FALSE;
+
+            memcpy (m_MainFrameData, pSrc, SrcLength);
             return S_OK;
         }
     }
     
-    if((m_HybridMode == TRUE) && 
-       (pProps->dwStreamId == AM_STREAM_BLOCK_ADDITIONNAL))
-    {
-        // rebuild correction data block
-        reconstruct_wavpack_frame(
-            m_CorrectionFrame,
-            &m_CommonFrameData,
-            (char*)pSrc,
-            SrcLength,
-            FALSE,
-            bSeveralBlocks,
-            m_PrivateData.version);
-    }
+    // Decoding has been significantly simplified by using the new "raw" decode option
+    // in WavPack 5.0. We now simply pass the raw data (with or without headers) to the
+    // library and all the samples in the frame are available from WavpackUnpackSamples()
+    // which will stop decoding once the frame is exhausted.
 
-    if (m_HeadersPresent)
-    {
-        if(wavpack_buffer_decoder_load_frame(m_Codec, (char*)pSrc, SrcLength, NULL, 0) == 0)
+	WavpackContext *wpc;
+	char error [80];
+
+    if (m_HybridMode == TRUE) {
+        if (!(wpc = WavpackOpenRawDecoder (m_MainFrameData, m_MainFrameSize,
+            pSrc, SrcLength, m_PrivateData.version, error, OPEN_NORMALIZE, 0)))
         {
             // Something is wrong
+            DebugLog("WavpackOpenRawDecoder(1) failed, %s", error);
             return S_FALSE;
         }
     }
-    else if(wavpack_buffer_decoder_load_frame(m_Codec, m_MainFrame->data, m_MainFrame->len,
-        m_HybridMode ? m_CorrectionFrame->data : NULL, m_CorrectionFrame->len) == 0)
-    {
-        // Something is wrong
-        return S_FALSE;
+    else { 
+        if (!(wpc = WavpackOpenRawDecoder (pSrc, SrcLength, NULL, 0, m_PrivateData.version, error, OPEN_NORMALIZE, 0)))
+        {
+            // Something is wrong
+            DebugLog("WavpackOpenRawDecoder(2) failed, %s", error);
+            return S_FALSE;
+        }
     }
-   
+
     // We can precise the decoding mode now
     if(m_HybridMode == FALSE)
     {
-        if(m_CommonFrameData.array_flags[0] & HYBRID_FLAG)
+        if(WavpackGetMode (wpc) & MODE_HYBRID)
         {
             m_DecodingMode = DECODING_MODE_LOSSY;
         }
@@ -624,8 +567,7 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
         }
     }
 
-    uint32_t samplesLeft = m_CommonFrameData.block_samples;
-    while(samplesLeft > 0)
+    while(1)
     {
         // Set up the output sample
         IMediaSample *pOutSample;
@@ -645,25 +587,25 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
 
         DstLength &= 0xFFFFFFF8;
     
-        long samples = wavpack_buffer_decoder_unpack(m_Codec,(int32_t *)pDst, m_SamplesPerBuffer);
+        long samples = WavpackUnpackSamples (wpc,(int32_t *)pDst, m_SamplesPerBuffer);
         if(samples)
         {
-            wavpack_buffer_format_samples(m_Codec,
+            wavpack_buffer_format_samples(wpc,
                 (uchar *) pDst,
                 (long*) pDst,
                 samples,
                 m_32bitFloatData);
             
             DstLength = samples *
-                WavpackGetBytesPerSample(m_Codec->wpc) *
-                WavpackGetNumChannels (m_Codec->wpc);
+                WavpackGetBytesPerSample(wpc) *
+                WavpackGetNumChannels (wpc);
 
             pOutSample->SetActualDataLength(DstLength);
             
             REFERENCE_TIME rtStart, rtStop;
-            rtStart = m_rtFrameStart + (REFERENCE_TIME)(((double)m_TotalSamples / WavpackGetSampleRate(m_Codec->wpc)) * 10000000);
+            rtStart = m_rtFrameStart + (REFERENCE_TIME)(((double)m_TotalSamples / WavpackGetSampleRate(wpc)) * 10000000);
             m_TotalSamples += samples;
-            rtStop = m_rtFrameStart + (REFERENCE_TIME)(((double)m_TotalSamples / WavpackGetSampleRate(m_Codec->wpc)) * 10000000);
+            rtStop = m_rtFrameStart + (REFERENCE_TIME)(((double)m_TotalSamples / WavpackGetSampleRate(wpc)) * 10000000);
 
             if(rtStart < 0 && rtStop < 0)
             {
@@ -692,11 +634,17 @@ HRESULT CWavPackDSDecoder::Receive(IMediaSample *pSample)
             pOutSample->Release();
             break;
         }
-        samplesLeft -= samples;
     }
     
     m_DecodedFrames++;
-    m_CrcError = WavpackGetNumErrors(m_Codec->wpc);
+    m_CrcError = WavpackGetNumErrors(wpc);
+
+	WavpackCloseFile (wpc);     // close the raw context, not actually the file we're streaming
+
+	if (m_MainFrameData) {
+		delete [] m_MainFrameData;
+		m_MainFrameData = NULL;
+	}
     
     return S_OK;
 }
