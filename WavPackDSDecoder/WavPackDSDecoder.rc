@@ -38,7 +38,7 @@ BEGIN
     CTEXT           "DirectShow filter by christophe.paris@free.fr",IDC_STATIC,10,70,188,8
     CONTROL         "IDB_BITMAP_LOGO_WAVPACK",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,28,97,16,14
     CONTROL         "IDB_BITMAP_LOGO_CORE",IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,125,97,16,14
-    CTEXT           "Copyright (c) 2016 David Bryant",IDC_STATIC,10,60,188,8
+    CTEXT           "Copyright (c) 2017 David Bryant",IDC_STATIC,10,60,188,8
     CTEXT           "Sponsored by http://www.corecodec.com",IDC_STATIC,10,80,188,8
 END
 
@@ -139,8 +139,8 @@ IDB_BITMAP_LOGO_CORE    BITMAP                  "Resource\\CoreLogo16.bmp"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,5,0,0
- PRODUCTVERSION 1,5,0,0
+ FILEVERSION 1,5,1,0
+ PRODUCTVERSION 1,5,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -158,12 +158,12 @@ BEGIN
             VALUE "Comments", "www.wavpack.com"
             VALUE "CompanyName", "-"
             VALUE "FileDescription", "WavPack Audio DirectShow Decoder"
-            VALUE "FileVersion", "1, 5, 0, 0"
+            VALUE "FileVersion", "1, 5, 1, 0"
             VALUE "InternalName", "WavPackDSDecoder"
-            VALUE "LegalCopyright", "Copyright © 2005-2016"
+            VALUE "LegalCopyright", "Copyright © 2005-2017"
             VALUE "OriginalFilename", "WavPackDSDecoder.ax"
             VALUE "ProductName", "WavPack Audio DirectShow Decoder"
-            VALUE "ProductVersion", "1, 5, 0, 0"
+            VALUE "ProductVersion", "1, 5, 1, 0"
         END
     END
     BLOCK "VarFileInfo"
