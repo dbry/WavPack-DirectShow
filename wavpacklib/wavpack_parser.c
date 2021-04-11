@@ -105,15 +105,18 @@ static int my_process_metadata (WavPack_parser *wpp, WavpackMetadata *wpmd)
         return TRUE;
 
 	case ID_CHANNEL_INFO:
-        if (wpmd->byte_length >= 1 && wpmd->byte_length <= 6) {
+        if (wpmd->byte_length >= 1 && wpmd->byte_length <= 7) {
             uint32_t bytecnt = wpmd->byte_length, channel_mask = 0, shift = 0;
             unsigned char *byteptr = wpmd->data;
 
-            if (bytecnt == 6) {
+            if (bytecnt >= 6) {
                 byteptr += 3;
-                channel_mask = (int32_t) *byteptr++;
-                channel_mask |= (int32_t) *byteptr++ << 8;
-                channel_mask |= (int32_t) *byteptr++ << 16;
+                channel_mask = (uint32_t) *byteptr++;
+                channel_mask |= (uint32_t) *byteptr++ << 8;
+                channel_mask |= (uint32_t) *byteptr++ << 16;
+
+                if (bytecnt == 7)                           // this was introduced in 5.0
+                    channel_mask |= (uint32_t) *byteptr << 24;
             }
             else
                 while (--bytecnt) {
